@@ -6,6 +6,7 @@ on:
       - "accelerate-with-copilot"
     paths:
       - "src/static/**"
+      - ".github/workflows/3-step.yml"
 
 permissions:
   contents: read
@@ -31,6 +32,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Get response templates
         uses: actions/checkout@v5
@@ -60,12 +63,11 @@ jobs:
 
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v47
-        with:
-          base_sha: ${{ github.event.repository.default_branch }}
-          files: |
-            src/static/app.js
-            src/static/styles.css
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          changed_files=$(git diff --name-only "origin/${DEFAULT_BRANCH}...HEAD" -- src/static/app.js src/static/styles.css | tr '\n' ' ')
+          echo "all_changed_files=${changed_files}" >> "$GITHUB_OUTPUT"
 
       - name: Check if app.js was modified
         id: check-app-js
